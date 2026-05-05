@@ -634,7 +634,7 @@ const ASTNode* Parser::Parse()
 
 	if (!IsAtEnd())
 	{
-		AddError(ParserErrorType::UnterminatedProgram, Token(TokenType::NullType, "", SourceLocation()));
+		AddError(ParserErrorType::UnterminatedProgram, _tokenList[_cursor]);
 	}
 
 	return _root.get();
