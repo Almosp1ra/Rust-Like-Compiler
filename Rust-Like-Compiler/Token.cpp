@@ -12,13 +12,23 @@ Token::Token(TokenType type, const string& content, const SourceLocation& locati
 
 /************************************************
 * EqualTo(type)         : 属于某一类，返回 true
-* EqualTo(type, content): 属于某一类且内容相同，返回 true
 ************************************************/
 bool Token::EqualTo(TokenType type) const
 {
 	return this->type == type;
 }
-bool Token::EqualTo(TokenType type, const string& content) const
+
+/************************************************
+* StringToTokenType: TokenType 与 String 转换
+************************************************/
+TokenType StringToTokenType(string content)
 {
-	return (this->type == type && this->content == content);
+	auto it = STR_TO_TOKENTYPE.find(content);
+
+	if (it == STR_TO_TOKENTYPE.end())
+	{
+		return TokenType::NullType;
+	}
+
+	return it->second;
 }

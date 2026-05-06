@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include "Token.h"
 using namespace std;
 
 /*
@@ -36,7 +37,7 @@ enum class BinaryOperator {
 };
 
 // 工具函数，枚举类型和 string 之间互相转换
-BinaryOperator StringToBinaryOp(const string& s);
+BinaryOperator TokenToBinaryOp(const Token& s);
 string BinaryOpToString(BinaryOperator op);
 string PrimitiveTypeToString(PrimitiveType type);
 string VariablePropertyToString(VariableProperty property);

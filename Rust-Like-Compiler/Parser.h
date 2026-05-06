@@ -50,7 +50,6 @@ private:
 
 	// 消耗特定类型的 Token，如果类型不符/内容不符则引发错误错误
 	Token Consume(TokenType type);	
-	Token Consume(TokenType type, const string& content);;
 
 	void AddError(ParserErrorType type, Token token);
 

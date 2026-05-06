@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include <iostream>
 
 Parser::Parser(const vector<Token>& tokenList): _tokenList(tokenList)
 {
@@ -56,15 +57,6 @@ Token Parser::Consume(TokenType type)
 
 	return Advance();
 }
-Token Parser::Consume(TokenType type, const string& content)
-{
-	if (!Peek().EqualTo(type, content))
-	{
-		AddError(ParserErrorType::UnexpectedToken, Peek());
-	}
-
-	return Advance();
-}
 
 /************************************************
 * AddError：向错误列表添加一个错误
@@ -81,16 +73,16 @@ void Parser::Synchronize()
 {
 	while (!IsAtEnd())
 	{
-		if (Peek().EqualTo(TokenType::Separator, ";"))
+		if (Peek().EqualTo(TokenType::Separator_Semicolon))
 		{
 			Advance();
 			return;
 		}
-		if (Peek().EqualTo(TokenType::Delimiter, "}"))
+		if (Peek().EqualTo(TokenType::Delimiter_BracketR))
 		{
 			return;
 		}
-		if (Peek().EqualTo(TokenType::Keyword, "fn"))
+		if (Peek().EqualTo(TokenType::Keyword_Fn))
 		{
 			return;
 		}
@@ -106,9 +98,9 @@ void Parser::Synchronize()
 // <变量属性> → mut
 unique_ptr<Node_VariableProperty> Parser::Parse_VariableProperty()
 {
-	if (Peek().EqualTo(TokenType::Keyword, "mut"))
+	if (Peek().EqualTo(TokenType::Keyword_Mut))
 	{
-		Consume(TokenType::Keyword, "mut");
+		Consume(TokenType::Keyword_Mut);
 
 		auto property = make_unique<Node_VariableProperty>();
 		property->property = VariableProperty::Mut;
@@ -125,9 +117,9 @@ unique_ptr<Node_VariableProperty> Parser::Parse_VariableProperty()
 // <类型> → i32
 unique_ptr<Node_Type> Parser::Parse_Type()
 {
-	if (Peek().EqualTo(TokenType::Keyword, "i32"))
+	if (Peek().EqualTo(TokenType::Keyword_I32))
 	{
-		Consume(TokenType::Keyword, "i32");
+		Consume(TokenType::Keyword_I32);
 
 		auto type = make_unique<Node_PrimitiveType>();
 		type->type = PrimitiveType::I32;
@@ -175,7 +167,7 @@ vector<unique_ptr<Node_Declaration>> Parser::Parse_DeclarationSequence()
 {
 	auto declarationList = vector<unique_ptr<Node_Declaration>>();
 
-	while (Peek().EqualTo(TokenType::Keyword, "fn"))
+	while (Peek().EqualTo(TokenType::Keyword_Fn))
 	{
 		auto declaration = Parse_Declaration();
 		if (declaration)
@@ -207,13 +199,13 @@ unique_ptr<Node_FunctionHeader> Parser::Parse_FunctionHeaderDeclaration()
 {
 	auto header = make_unique<Node_FunctionHeader>();
 
-	Consume(TokenType::Keyword, "fn");
+	Consume(TokenType::Keyword_Fn);
 
 	header->name = Consume(TokenType::Identifier).content;
 
-	Consume(TokenType::Delimiter, "(");
+	Consume(TokenType::Delimiter_ParenL);
 	header->parameterList = Parse_ParameterList();
-	Consume(TokenType::Delimiter, ")");
+	Consume(TokenType::Delimiter_ParenR);
 
 	// 函数类型声明
 	header->type = Parse_FunctionTypeDeclaration();
@@ -224,9 +216,9 @@ unique_ptr<Node_FunctionHeader> Parser::Parse_FunctionHeaderDeclaration()
 // <函数类型声明> → 空 | '->' <类型>
 unique_ptr<Node_Type> Parser::Parse_FunctionTypeDeclaration()
 {
-	if (Peek().EqualTo(TokenType::Special, "->"))
+	if (Peek().EqualTo(TokenType::Arrow))
 	{
-		Consume(TokenType::Special, "->");
+		Consume(TokenType::Arrow);
 		return Parse_Type();
 	}
 
@@ -239,13 +231,13 @@ vector<unique_ptr<Node_Parameter>> Parser::Parse_ParameterList()
 {
 	auto parameterList = vector<unique_ptr<Node_Parameter>>();
 
-	if (Peek().EqualTo(TokenType::Keyword, "mut"))
+	if (Peek().EqualTo(TokenType::Keyword_Mut))
 	{
 		parameterList.push_back(Parse_Parameter());
 
-		while (Peek().EqualTo(TokenType::Separator, ","))
+		while (Peek().EqualTo(TokenType::Separator_Comma))
 		{
-			Consume(TokenType::Separator, ",");
+			Consume(TokenType::Separator_Comma);
 			parameterList.push_back(Parse_Parameter());
 		}
 	}
@@ -264,7 +256,7 @@ unique_ptr<Node_Parameter> Parser::Parse_Parameter()
 
 	parameter->name = Consume(TokenType::Identifier).content;
 
-	Consume(TokenType::Separator, ":");
+	Consume(TokenType::Separator_Colon);
 
 	parameter->type = Parse_Type();
 
@@ -276,9 +268,9 @@ unique_ptr<Node_StatementBlock> Parser::Parse_StatementBlock()
 {
 	auto statementBlock = make_unique<Node_StatementBlock>();
 
-	Consume(TokenType::Delimiter, "{");
+	Consume(TokenType::Delimiter_BracketL);
 	statementBlock->statements = Parse_StatementSequence();
-	Consume(TokenType::Delimiter, "}");
+	Consume(TokenType::Delimiter_BracketR);
 
 	return statementBlock;
 }
@@ -290,14 +282,14 @@ vector<unique_ptr<Node_Statement>> Parser::Parse_StatementSequence()
 
 	Token t = Peek();
 
-	while (t.EqualTo(TokenType::Separator, ";") 
-		|| t.EqualTo(TokenType::Keyword, "return")
-		|| t.EqualTo(TokenType::Keyword, "let")
-		|| t.EqualTo(TokenType::Keyword, "if")
-		|| t.EqualTo(TokenType::Keyword, "while")
+	while (t.EqualTo(TokenType::Separator_Semicolon) 
+		|| t.EqualTo(TokenType::Keyword_Return)
+		|| t.EqualTo(TokenType::Keyword_Let)
+		|| t.EqualTo(TokenType::Keyword_If)
+		|| t.EqualTo(TokenType::Keyword_While)
 		|| t.EqualTo(TokenType::Identifier)
 		|| t.EqualTo(TokenType::Value)
-		|| t.EqualTo(TokenType::Delimiter, "("))
+		|| t.EqualTo(TokenType::Delimiter_ParenL))
 	{
 		auto statement = Parse_Statement();
 		if (statement)
@@ -313,34 +305,34 @@ unique_ptr<Node_Statement> Parser::Parse_Statement()
 {
 	Token t = Peek();
 
-	if (t.EqualTo(TokenType::Separator, ";"))
+	if (t.EqualTo(TokenType::Separator_Semicolon))
 	{
-		Consume(TokenType::Separator, ";");
+		Consume(TokenType::Separator_Semicolon);
 		return make_unique<Node_EmptyStatement>();
 	}
-	else if (t.EqualTo(TokenType::Keyword, "return"))
+	else if (t.EqualTo(TokenType::Keyword_Return))
 	{
 		return Parse_ReturnStatement();
 	}
-	else if (t.EqualTo(TokenType::Keyword, "let"))
+	else if (t.EqualTo(TokenType::Keyword_Let))
 	{
 		return Parse_VariableDeclarationStatement();
 	}
-	else if (t.EqualTo(TokenType::Keyword, "if"))
+	else if (t.EqualTo(TokenType::Keyword_If))
 	{
 		return Parse_IfStatement();
 	}
-	else if (t.EqualTo(TokenType::Keyword, "while"))
+	else if (t.EqualTo(TokenType::Keyword_While))
 	{
 		return Parse_LoopStatement();
 	}
-	else if (t.EqualTo(TokenType::Identifier) && PeekNext().EqualTo(TokenType::AssignmentOperator, "="))	// 这里相当于用LL(2)来写，根据后两个token来判断是赋值语句还是表达式语句
+	else if (t.EqualTo(TokenType::Identifier) && PeekNext().EqualTo(TokenType::Operator_Assign))	// 这里相当于用LL(2)来写，根据后两个token来判断是赋值语句还是表达式语句
 	{
 		return Parse_AssignmentStatement();
 	}
 	else if (t.EqualTo(TokenType::Identifier)
 		  || t.EqualTo(TokenType::Value)
-		  || t.EqualTo(TokenType::Delimiter, "("))
+		  || t.EqualTo(TokenType::Delimiter_ParenL))
 	{
 		return Parse_ExpressionStatement();
 	}
@@ -356,9 +348,9 @@ unique_ptr<Node_ReturnStatement> Parser::Parse_ReturnStatement()
 {
 	auto returnStatement = make_unique<Node_ReturnStatement>();
 
-	Consume(TokenType::Keyword, "return");
+	Consume(TokenType::Keyword_Return);
 	returnStatement->expr = Parse_OptionalExpression();
-	Consume(TokenType::Separator, ";");
+	Consume(TokenType::Separator_Semicolon);
 
 	return returnStatement;
 }
@@ -369,7 +361,7 @@ unique_ptr<Node_VariableDeclarationStatement> Parser::Parse_VariableDeclarationS
 {
 	auto variableDeclarationStatement = make_unique<Node_VariableDeclarationStatement>();
 
-	Consume(TokenType::Keyword, "let");
+	Consume(TokenType::Keyword_Let);
 
 	variableDeclarationStatement->varProperty = Parse_VariableProperty();
 	if (!variableDeclarationStatement->varProperty)
@@ -381,7 +373,7 @@ unique_ptr<Node_VariableDeclarationStatement> Parser::Parse_VariableDeclarationS
 
 	variableDeclarationStatement->type = Parse_VariableTypeDeclaration();
 
-	Consume(TokenType::Separator, ";");
+	Consume(TokenType::Separator_Semicolon);
 
 	return variableDeclarationStatement;
 }
@@ -389,9 +381,9 @@ unique_ptr<Node_VariableDeclarationStatement> Parser::Parse_VariableDeclarationS
 // <变量类型声明> → 空 | ':' <类型>
 unique_ptr<Node_Type> Parser::Parse_VariableTypeDeclaration()
 {
-	if (Peek().EqualTo(TokenType::Separator, ":"))
+	if (Peek().EqualTo(TokenType::Separator_Colon))
 	{
-		Consume(TokenType::Separator, ":");
+		Consume(TokenType::Separator_Colon);
 		return Parse_Type();
 	}
 	
@@ -403,7 +395,7 @@ unique_ptr<Node_IfStatement> Parser::Parse_IfStatement()
 {
 	auto ifStatement = make_unique<Node_IfStatement>();
 
-	Consume(TokenType::Keyword, "if");
+	Consume(TokenType::Keyword_If);
 
 	ifStatement->condition = Parse_Expression();
 	ifStatement->thenBlock = Parse_StatementBlock();
@@ -429,7 +421,7 @@ unique_ptr<Node_WhileStatement> Parser::Parse_WhileStatement()
 {
 	auto whileStatement = make_unique<Node_WhileStatement>();
 
-	Consume(TokenType::Keyword, "while");
+	Consume(TokenType::Keyword_While);
 	whileStatement->condition = Parse_Expression();
 	whileStatement->body = Parse_StatementBlock();
 
@@ -442,7 +434,7 @@ unique_ptr<Node_ExpressionStatement> Parser::Parse_ExpressionStatement()
 	auto expressionStatement = make_unique<Node_ExpressionStatement>();
 
 	expressionStatement->expr =	Parse_Expression();
-	Consume(TokenType::Separator, ";");
+	Consume(TokenType::Separator_Semicolon);
 
 	return expressionStatement;
 }
@@ -453,9 +445,9 @@ unique_ptr<Node_AssignmentStatement> Parser::Parse_AssignmentStatement()
 	auto assignmentStatement = make_unique<Node_AssignmentStatement>();
 
 	assignmentStatement->leftValue = Parse_LeftValue();
-	Consume(TokenType::AssignmentOperator, "=");
+	Consume(TokenType::Operator_Assign);
 	assignmentStatement->expr = Parse_Expression();
-	Consume(TokenType::Separator, ";");
+	Consume(TokenType::Separator_Semicolon);
 
 	return assignmentStatement;
 }
@@ -467,7 +459,7 @@ unique_ptr<Node_Expression>	Parser::Parse_OptionalExpression()
 
 	if (t.EqualTo(TokenType::Identifier)
 	 || t.EqualTo(TokenType::Value)
-	 || t.EqualTo(TokenType::Delimiter, "("))
+	 || t.EqualTo(TokenType::Delimiter_ParenL))
 	{
 		return Parse_Expression();
 	}
@@ -482,18 +474,20 @@ unique_ptr<Node_Expression>	Parser::Parse_Expression()
 	// 第一个加减表达式
 	auto expr = Parse_AddSubExpression();
 
-	BinaryOperator nextOp = StringToBinaryOp(Peek().content);
+	BinaryOperator nextOp = TokenToBinaryOp(Peek());
 
 	// 后续加减表达式
-	while (Peek().EqualTo(TokenType::Operator) && OpIsComparison(nextOp))
+	while (OpIsComparison(nextOp))
 	{
+		Consume(Peek().type);
+
 		auto expr_temp = make_unique<Node_BinaryExpression>();
 
 		expr_temp->left = move(expr);
-		expr_temp->op = StringToBinaryOp(Consume(TokenType::Operator).content);
+		expr_temp->op = nextOp;
 		expr_temp->right = Parse_AddSubExpression();
 
-		nextOp = StringToBinaryOp(Peek().content);
+		nextOp = TokenToBinaryOp(Peek());
 
 		expr = move(expr_temp);
 	}
@@ -508,18 +502,20 @@ unique_ptr<Node_Expression>	Parser::Parse_AddSubExpression()
 	// 第一个项
 	auto expr = Parse_Term();
 
-	BinaryOperator nextOp = StringToBinaryOp(Peek().content);
+	BinaryOperator nextOp = TokenToBinaryOp(Peek());
 
 	// 后续项
-	while (Peek().EqualTo(TokenType::Operator) && OpIsAddSub(nextOp))
+	while (OpIsAddSub(nextOp))
 	{
+		Consume(Peek().type);
+
 		auto expr_temp = make_unique<Node_BinaryExpression>();
 
 		expr_temp->left = move(expr);
-		expr_temp->op = StringToBinaryOp(Consume(TokenType::Operator).content);
+		expr_temp->op = nextOp;
 		expr_temp->right = Parse_Term();
 
-		nextOp = StringToBinaryOp(Peek().content);
+		nextOp = TokenToBinaryOp(Peek());
 
 		expr = move(expr_temp);
 	}
@@ -534,18 +530,20 @@ unique_ptr<Node_Expression>	Parser::Parse_Term()
 	// 第一个因子
 	auto expr = Parse_Oprand();
 
-	BinaryOperator nextOp = StringToBinaryOp(Peek().content);
+	BinaryOperator nextOp = TokenToBinaryOp(Peek());
 
 	// 后续因子
-	while (Peek().EqualTo(TokenType::Operator) && OpIsMultDiv(nextOp))
+	while (OpIsMultDiv(nextOp))
 	{
-		auto expr_temp = make_unique<Node_BinaryExpression>();
-		
-		expr_temp->left  = move(expr);
-		expr_temp->op    = StringToBinaryOp(Consume(TokenType::Operator).content);
-		expr_temp->right = Parse_Oprand();
+		Consume(Peek().type);
 
-		nextOp = StringToBinaryOp(Peek().content);
+		auto expr_temp = make_unique<Node_BinaryExpression>();
+
+		expr_temp->left = move(expr);
+		expr_temp->op = nextOp;
+		expr_temp->right = Parse_Term();
+
+		nextOp = TokenToBinaryOp(Peek());
 
 		expr = move(expr_temp);
 	}
@@ -567,24 +565,24 @@ unique_ptr<Node_Expression>	Parser::Parse_Oprand()
 
 		return number;
 	}
-	else if (t.EqualTo(TokenType::Delimiter, "("))
+	else if (t.EqualTo(TokenType::Delimiter_ParenL))
 	{
-		Consume(TokenType::Delimiter, "(");
+		Consume(TokenType::Delimiter_ParenL);
 		auto expr = Parse_Expression();
-		Consume(TokenType::Delimiter, ")");
+		Consume(TokenType::Delimiter_ParenR);
 
 		return expr;
 	}
 	else if (t.EqualTo(TokenType::Identifier))
 	{
-		if (PeekNext().EqualTo(TokenType::Delimiter, "("))
+		if (PeekNext().EqualTo(TokenType::Delimiter_ParenL))
 		{
 			auto call = make_unique<Node_CallExpression>();
 
 			call->name = Consume(TokenType::Identifier).content;
-			Consume(TokenType::Delimiter, "(");
+			Consume(TokenType::Delimiter_ParenL);
 			call->argumentList = Parse_ArgumentList();
-			Consume(TokenType::Delimiter, ")");
+			Consume(TokenType::Delimiter_ParenR);
 
 			return call;
 		}
@@ -610,13 +608,13 @@ vector<unique_ptr<Node_Expression>> Parser::Parse_ArgumentList()
 
 	if (t.EqualTo(TokenType::Identifier)
 		|| t.EqualTo(TokenType::Value)
-		|| t.EqualTo(TokenType::Delimiter, "("))
+		|| t.EqualTo(TokenType::Delimiter_ParenL))
 	{
 		argumentList.push_back(Parse_Expression());
 
-		while (Peek().EqualTo(TokenType::Separator, ","))
+		while (Peek().EqualTo(TokenType::Separator_Comma))
 		{
-			Consume(TokenType::Separator, ",");
+			Consume(TokenType::Separator_Comma);
 			argumentList.push_back(Parse_Expression());
 		}
 	}

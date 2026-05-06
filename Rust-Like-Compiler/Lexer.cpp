@@ -93,22 +93,24 @@ void Lexer::SkipBlockComment()
 {
 	SourceLocation location = _location;
 
+	string content = "";
+
 	// 读入 /*
-	Advance();
-	Advance();
+	content += Advance();
+	content += Advance();
 
 	while (!IsAtEnd()) {
 		if (Peek() == '*' && PeekNext() == '/')	// 读入 */
 		{
-			Advance();
-			Advance();
+			content += Advance();
+			content += Advance();
 			return;
 		}
-		Advance();
+		content += Advance();
 	}
 
 	// 如果运行到这里，说明未读到 */ ，注释未正常闭合，添加错误
-	AddError(LexerErrorType::UnterminatedComment, location);
+	AddError(LexerErrorType::UnterminatedComment, location, content);
 }
 
 /************************************************
@@ -148,9 +150,9 @@ Token Lexer::AddToken(TokenType type, const string& content, const SourceLocatio
 /************************************************
 * AddError：向错误列表添加一个错误
 ************************************************/
-void Lexer::AddError(LexerErrorType type, const SourceLocation& location)
+void Lexer::AddError(LexerErrorType type, const SourceLocation& location, const string content)
 {
-	_errorList.push_back(LexerError(type, location));
+	_errorList.push_back(LexerError(type, location, content));
 }
 
 /************************************************
@@ -190,86 +192,135 @@ Token Lexer::NextToken()
 	// 读取一个字符，判断分支
 	SourceLocation location = _location;
 	char ch = Advance();
+	string content = string(1, ch);
 
 	if (ch == '_' || IsAlpha(ch))	// 标识符
 	{
-		string content = "";
-		content += ch;
 		while (!IsAtEnd() && (Peek() == '_' || IsAlphaOrDigit(Peek())))
 		{
 			content += Advance();
 		}
-		if (KEYWORDS.find(content) != KEYWORDS.end())	// 关键字是标识符的一种特例
+
+		auto type = StringToTokenType(content);
+
+		if (type != TokenType::NullType)	// 关键字是标识符的一种特例
 		{
-			return Token(TokenType::Keyword, content, location);
+			return Token(type, content, location);
 		}
 		return Token(TokenType::Identifier, content, location);
 	}
 	else if (IsDigit(ch))	// 数值
 	{
-		string content = "";
-		content += ch;
 		while (!IsAtEnd() && IsDigit(Peek()))
 		{
 			content += Advance();
 		}
 		return Token(TokenType::Value, content, location);
 	}
-	else if (ch == '=')	// 赋值号和 == 算符
+	else if (ch == '=')	// = 和 == 算符
 	{
 		if (!IsAtEnd() && Peek() == '=')
 		{
-			Advance();
-			return Token(TokenType::Operator, "==", location);
+			content += Advance();
+			return Token(TokenType::Operator_Eq, content, location);
 		}
-		return Token(TokenType::AssignmentOperator, string(1, ch), location);
+		return Token(TokenType::Operator_Assign, content, location);
 	}
 	else if (ch == '!')	// != 算符
 	{
 		if (!IsAtEnd() && Peek() == '=')
 		{
-			Advance();
-			return Token(TokenType::Operator, "!=", location);
+			content += Advance();
+			return Token(TokenType::Operator_Ne, content, location);
 		}
 	}
-	else if (ch == '<' || ch == '>')	// < | > | <= | >= 算符
+	else if (ch == '<')	// < | <= 算符
 	{
-		string content = string(1, ch);
 		if (!IsAtEnd() && Peek() == '=')
 		{
 			content += Advance();
+			return Token(TokenType::Operator_Le, content, location);
 		}
-		return Token(TokenType::Operator, content, location);
+		return Token(TokenType::Operator_Lt, content, location);
+	}
+	else if (ch == '>')	// > | >= 算符
+	{
+		if (!IsAtEnd() && Peek() == '=')
+		{
+			content += Advance();
+			return Token(TokenType::Operator_Ge, content, location);
+		}
+		return Token(TokenType::Operator_Gt, content, location);
 	}
 	else if (ch == '-')	// -算符、->特殊符
 	{
 		if (!IsAtEnd() && Peek() == '>')
 		{
-			Advance();
-			return Token(TokenType::Special, "->", location);
+			content += Advance();
+			return Token(TokenType::Arrow, content, location);
 		}
-		return Token(TokenType::Operator, string(1, ch), location);
+		return Token(TokenType::Operator_Sub, content, location);
 	}
-	else if (ch == '+' || ch == '*' || ch == '/' || ch == '&')	// + | * | / | & 算符
+	else if (ch == '+')	// + 算符
 	{
-		return Token(TokenType::Operator, string(1, ch), location);
+		return Token(TokenType::Operator_Add, content, location);
 	}
-	else if (ch == '(' || ch == ')' || ch == '[' || ch == ']' || ch == '{' || ch == '}')	// 界符
+	else if (ch == '*')	// * 算符
 	{
-		return Token(TokenType::Delimiter, string(1, ch), location);
+		return Token(TokenType::Operator_Mult, content, location);
 	}
-	else if (ch == ';' || ch == ':' || ch == ',')	// 分隔符
+	else if (ch == '/')	// / 算符
 	{
-		return Token(TokenType::Separator, string(1, ch), location);
+		return Token(TokenType::Operator_Div, content, location);
+	}
+	else if (ch == '&')	// & 算符
+	{
+		return Token(TokenType::Operator_And, content, location);
+	}
+	else if (ch == '(')	// 界符
+	{
+		return Token(TokenType::Delimiter_ParenL, content, location);
+	}
+	else if (ch == ')')
+	{
+		return Token(TokenType::Delimiter_ParenR, content, location);
+	}
+	else if (ch == '[')
+	{
+		return Token(TokenType::Delimiter_BraceL, content, location);
+	}
+	else if (ch == ']')
+	{
+		return Token(TokenType::Delimiter_BraceR, content, location);
+	}
+	else if (ch == '{')
+	{
+		return Token(TokenType::Delimiter_BracketL, content, location);
+	}
+	else if (ch == '}')
+	{
+		return Token(TokenType::Delimiter_BracketR, content, location);
+	}
+	else if (ch == ';')	// 分隔符
+	{
+		return Token(TokenType::Separator_Semicolon, content, location);
+	}
+	else if (ch == ':')
+	{
+		return Token(TokenType::Separator_Colon, content, location);
+	}
+	else if (ch == ',')
+	{
+		return Token(TokenType::Separator_Comma, content, location);
 	}
 	else if (ch == '.')	// .和..特殊符
 	{
 		if (!IsAtEnd() && Peek() == '=')
 		{
-			Advance();
-			return Token(TokenType::Special, "..", location);
+			content += Advance();
+			return Token(TokenType::DotDot, content, location);
 		}
-		return Token(TokenType::Special, string(1, ch), location);
+		return Token(TokenType::Dot, content, location);
 	}
 	//else if (ch == '#')	// 终止符
 	//{
@@ -277,8 +328,8 @@ Token Lexer::NextToken()
 	//}
 
 	// 如果运行到这里，说明是未定义的Token，添加错误
-	AddError(LexerErrorType::UndefinedToken, location);
-	return Token(TokenType::NullType, string(1, ch), location);
+	AddError(LexerErrorType::UndefinedToken, location, content);
+	return Token(TokenType::NullType, content, location);
 }
 
 /************************************************
@@ -293,10 +344,11 @@ const vector<Token>& Lexer::Lex()
 
 	while (!IsAtEnd()) {
 		Token t = NextToken();
-		_tokenList.push_back(t);
+		if(t.type != TokenType::NullType)
+			_tokenList.push_back(t);
 	}
 
-	_tokenList.push_back(Token(TokenType::Terminator, "#", SourceLocation()));
+	_tokenList.push_back(Token(TokenType::Terminator, "", SourceLocation()));
 
 	return _tokenList;
 }

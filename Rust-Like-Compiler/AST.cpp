@@ -1,20 +1,21 @@
 #include "AST.h"
+#include "AST.h"
 
 /************************************************
 * StringToBinaryOp: 字符串 -> 二元运算符枚举
 ************************************************/
-BinaryOperator StringToBinaryOp(const string& s)
+BinaryOperator TokenToBinaryOp(const Token& s)
 {
-	return (s == "+") ? BinaryOperator::Add :
-		(s == "-") ? BinaryOperator::Sub :
-		(s == "*") ? BinaryOperator::Mult :
-		(s == "/") ? BinaryOperator::Div :
-		(s == "<") ? BinaryOperator::LT :
-		(s == "<=") ? BinaryOperator::LE :
-		(s == ">") ? BinaryOperator::GT :
-		(s == ">=") ? BinaryOperator::GE :
-		(s == "==") ? BinaryOperator::EQ :
-		(s == "!=") ? BinaryOperator::NE : BinaryOperator::NullType;
+	return (s.type == TokenType::Operator_Add) ? BinaryOperator::Add :
+		(s.type == TokenType::Operator_Sub) ? BinaryOperator::Sub :
+		(s.type == TokenType::Operator_Mult) ? BinaryOperator::Mult :
+		(s.type == TokenType::Operator_Div) ? BinaryOperator::Div :
+		(s.type == TokenType::Operator_Lt) ? BinaryOperator::LT :
+		(s.type == TokenType::Operator_Le) ? BinaryOperator::LE :
+		(s.type == TokenType::Operator_Gt) ? BinaryOperator::GT :
+		(s.type == TokenType::Operator_Ge) ? BinaryOperator::GE :
+		(s.type == TokenType::Operator_Eq) ? BinaryOperator::EQ :
+		(s.type == TokenType::Operator_Ne) ? BinaryOperator::NE : BinaryOperator::NullType;
 }
 
 /************************************************

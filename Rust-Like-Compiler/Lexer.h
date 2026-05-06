@@ -17,9 +17,10 @@ struct LexerError
 {
 	LexerErrorType type;
 	SourceLocation location;
+	string content;
 
-	LexerError(LexerErrorType type, SourceLocation location)
-		: type(type), location(location)
+	LexerError(LexerErrorType type, SourceLocation location, string content)
+		: type(type), location(location), content(content)
 	{
 	}
 };
@@ -58,7 +59,7 @@ private:
 
 	// 向列表中加入 Token 或 错误
 	Token AddToken(TokenType type, const string& content, const SourceLocation& location);
-	void AddError(LexerErrorType type, const SourceLocation& location);
+	void AddError(LexerErrorType type, const SourceLocation& location, const string content);
 
 public:
 	void  LoadFile(const string& filename);	// 读取文件

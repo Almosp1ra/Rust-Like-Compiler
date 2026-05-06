@@ -41,7 +41,7 @@ void CompilerTools::PrintLexerError(const vector<LexerError>& errorList)
 		string msg =
 			(err.type == LexerErrorType::UndefinedToken) ? "Undefined Token" :
 			(err.type == LexerErrorType::UnterminatedComment) ? "Unterminated Comment" : "Unknown Error";
-		cout << "[Error] " << msg << " (Line: " << err.location.line << ", Column" << err.location.column << ")" << endl;
+		cout << "[Error] " << msg << " (Line: " << err.location.line << ", Column" << err.location.column << ") Content: " << err.content << endl;
 	}
 
 	cout << endl;
@@ -68,8 +68,44 @@ void CompilerTools::PrintTokenList(const vector<Token>& tokenList)
 
 		switch (t.type)
 		{
-		case TokenType::Keyword:
-			typeStr = "Keyword";
+		case TokenType::Keyword_I32:
+			typeStr = "Keyword 'i32'";
+			break;
+		case TokenType::Keyword_Let:
+			typeStr = "Keyword 'let'";
+			break;
+		case TokenType::Keyword_If:
+			typeStr = "Keyword 'if'";
+			break;
+		case TokenType::Keyword_Else:
+			typeStr = "Keyword 'else'";
+			break;
+		case TokenType::Keyword_While:
+			typeStr = "Keyword 'while'";
+			break;
+		case TokenType::Keyword_Return:
+			typeStr = "Keyword 'return'";
+			break;
+		case TokenType::Keyword_Mut:
+			typeStr = "Keyword 'mut'";
+			break;
+		case TokenType::Keyword_Fn:
+			typeStr = "Keyword 'fn'";
+			break;
+		case TokenType::Keyword_For:
+			typeStr = "Keyword 'for'";
+			break;
+		case TokenType::Keyword_In:
+			typeStr = "Keyword 'in'";
+			break;
+		case TokenType::Keyword_Loop:
+			typeStr = "Keyword 'loop'";
+			break;
+		case TokenType::Keyword_Break:
+			typeStr = "Keyword 'break'";
+			break;
+		case TokenType::Keyword_Continue:
+			typeStr = "Keyword 'continue'";
 			break;
 		case TokenType::Identifier:
 			typeStr = "Identifier";
@@ -77,23 +113,83 @@ void CompilerTools::PrintTokenList(const vector<Token>& tokenList)
 		case TokenType::Value:
 			typeStr = "Number";
 			break;
-		case TokenType::AssignmentOperator:
-			typeStr = "Assignment Operator";
+		case TokenType::Operator_Assign:
+			typeStr = "Operator '='";
 			break;
-		case TokenType::Operator:
-			typeStr = "Operator";
+		case TokenType::Operator_Add:
+			typeStr = "Operator '+'";
 			break;
-		case TokenType::Delimiter:
-			typeStr = "Delimiter";
+		case TokenType::Operator_Sub:
+			typeStr = "Operator '-'";
 			break;
-		case TokenType::Separator:
-			typeStr = "Separator";
+		case TokenType::Operator_Mult:
+			typeStr = "Operator '*";
 			break;
-		case TokenType::Special:
-			typeStr = "Special";
+		case TokenType::Operator_Div:
+			typeStr = "Operator '/";
 			break;
-		case TokenType::CommentMarker:
-			typeStr = "Comment Marker";
+		case TokenType::Operator_Eq:
+			typeStr = "Operator '=='";
+			break;
+		case TokenType::Operator_Gt:
+			typeStr = "Operator '>'";
+			break;
+		case TokenType::Operator_Ge:
+			typeStr = "Operator '>='";
+			break;
+		case TokenType::Operator_Lt:
+			typeStr = "Operator '<'";
+			break;
+		case TokenType::Operator_Le:
+			typeStr = "Operator '<='";
+			break;
+		case TokenType::Operator_Ne:
+			typeStr = "Operator '!='";
+			break;
+		case TokenType::Operator_And:
+			typeStr = "Operator '&'";
+			break;
+		case TokenType::Delimiter_ParenL:
+			typeStr = "Delimiter '('";
+			break;
+		case TokenType::Delimiter_ParenR:
+			typeStr = "Delimiter ')'";
+			break;
+		case TokenType::Delimiter_BraceL:
+			typeStr = "Delimiter '['";
+			break;
+		case TokenType::Delimiter_BraceR:
+			typeStr = "Delimiter ']'";
+			break;
+		case TokenType::Delimiter_BracketL:
+			typeStr = "Delimiter '{'";
+			break;
+		case TokenType::Delimiter_BracketR:
+			typeStr = "Delimiter '}'";
+			break;
+		case TokenType::Separator_Semicolon:
+			typeStr = "Separator ';'";
+			break;
+		case TokenType::Separator_Colon:
+			typeStr = "Separator ':'";
+			break;
+		case TokenType::Separator_Comma:
+			typeStr = "Separator ','";
+			break;
+		case TokenType::Arrow:
+			typeStr = "Arrow";
+			break;
+		case TokenType::Dot:
+			typeStr = "Dot";
+			break;
+		case TokenType::DotDot:
+			typeStr = "DotDot";
+			break;
+		case TokenType::Comment_Line:
+			typeStr = "Line Comment";
+			break;
+		case TokenType::Comment_Block:
+			typeStr = "Block Comment";
 			break;
 		case TokenType::Terminator:
 			typeStr = "Terminator";
