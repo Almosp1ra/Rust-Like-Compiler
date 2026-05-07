@@ -1,22 +1,23 @@
-// 阶乘函数
-fn factorial(mut n: i32) -> i32 {
-    if n <= 1 { return 1; }
-    return n * factorial(n - 1);
-}
-
-fn main() -> i32 {
+fn cmp() -> i32 {
     let mut x: i32;
-    x = 10;
-    let mut result: i32;
-    result = factorial(5);
-
-    // while 循环
-    let mut i: i32;
-    i = 0;
-    while i < 5 {
+    x = 1;
+    if x == 1 {
         x = x + 1;
-        i = i + 1;
     }
-
-    return 0;
+    if x != 2 {
+        x = x + 1;
+    }
+    if x < 10 {
+        x = x + 1;
+    }
+    if x <= 20 {
+        x = x + 1;
+    }
+    if x > 3 {
+        x = x + 1;
+    }
+    if x >= 4 {
+        x = x + 1;
+    }
+    return x;
 }
