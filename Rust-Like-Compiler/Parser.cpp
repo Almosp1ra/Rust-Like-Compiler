@@ -24,7 +24,7 @@ Token Parser::Advance()
 ************************************************/
 Token Parser::Peek()
 {
-	if (IsAtEnd())
+	if (_cursor >= _tokenList.size())
 		return Token(TokenType::NullType, "", SourceLocation());
 
 	return _tokenList[_cursor];
@@ -42,7 +42,8 @@ Token Parser::PeekNext()
 ************************************************/
 bool Parser::IsAtEnd()
 {
-	return _tokenList[_cursor].EqualTo(TokenType::Terminator);
+	return _cursor >= _tokenList.size()
+		|| _tokenList[_cursor].EqualTo(TokenType::Terminator);
 }
 
 /************************************************
@@ -226,7 +227,7 @@ unique_ptr<Node_Type> Parser::Parse_FunctionTypeDeclaration()
 }
 
 // <形参列表> → 空 | <形参><后续形参>
-// <后续形参> → 空 | ',' < 形参列表 >
+// <后续形参> → 空 | ',' <形参><后续形参>
 vector<unique_ptr<Node_Parameter>> Parser::Parse_ParameterList()
 {
 	auto parameterList = vector<unique_ptr<Node_Parameter>>();
@@ -300,7 +301,7 @@ vector<unique_ptr<Node_Statement>> Parser::Parse_StatementSequence()
 	return statementList;
 }
 
-// <语句> → ';' | <返回语句> | <变量声明语句> | <if语句> | <循环语句> | <ID开头语句> | <NUM开头语句> | <括号开头语句>
+// <语句> → ';' | <返回语句> | <变量声明语句> | <if语句> | <循环语句> | <赋值语句> | <表达式语句>
 unique_ptr<Node_Statement> Parser::Parse_Statement()
 {
 	Token t = Peek();
@@ -355,8 +356,7 @@ unique_ptr<Node_ReturnStatement> Parser::Parse_ReturnStatement()
 	return returnStatement;
 }
 
-// <变量声明语句> → let <变量声明> ';' 
-// <变量声明> → <变量属性> <ID> <变量类型声明>
+// <变量声明语句> → let <变量属性> <ID> <变量类型声明> ';' 
 unique_ptr<Node_VariableDeclarationStatement> Parser::Parse_VariableDeclarationStatement()
 {
 	auto variableDeclarationStatement = make_unique<Node_VariableDeclarationStatement>();
@@ -428,17 +428,6 @@ unique_ptr<Node_WhileStatement> Parser::Parse_WhileStatement()
 	return whileStatement;
 }
 
-// <表达式语句> → <表达式> ';'
-unique_ptr<Node_ExpressionStatement> Parser::Parse_ExpressionStatement()
-{
-	auto expressionStatement = make_unique<Node_ExpressionStatement>();
-
-	expressionStatement->expr =	Parse_Expression();
-	Consume(TokenType::Separator_Semicolon);
-
-	return expressionStatement;
-}
-
 // <赋值语句> → <左值> '=' <表达式> ';'
 unique_ptr<Node_AssignmentStatement> Parser::Parse_AssignmentStatement()
 {
@@ -450,6 +439,17 @@ unique_ptr<Node_AssignmentStatement> Parser::Parse_AssignmentStatement()
 	Consume(TokenType::Separator_Semicolon);
 
 	return assignmentStatement;
+}
+
+// <表达式语句> → <表达式> ';'
+unique_ptr<Node_ExpressionStatement> Parser::Parse_ExpressionStatement()
+{
+	auto expressionStatement = make_unique<Node_ExpressionStatement>();
+
+	expressionStatement->expr =	Parse_Expression();
+	Consume(TokenType::Separator_Semicolon);
+
+	return expressionStatement;
 }
 
 // <可选表达式> → 空 | <表达式>
@@ -624,7 +624,7 @@ vector<unique_ptr<Node_Expression>> Parser::Parse_ArgumentList()
 
 
 /************************************************
-* Advance：语法分析，返回抽象语法树根节点
+* Parse：语法分析，返回抽象语法树根节点
 ************************************************/
 const ASTNode* Parser::Parse()
 {

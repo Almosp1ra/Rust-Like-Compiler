@@ -227,7 +227,10 @@ void CompilerTools::PrintParserError(const vector<ParserError>& errorList)
 		string msg =
 			(err.type == ParserErrorType::UnexpectedToken) ? "Unexpected Token" :
 			(err.type == ParserErrorType::UnterminatedProgram) ? "Unterminated Program" : "Unknown Error";
-		cout << "[Error] " << msg << " at '" << err.token.content << "' (Line: " << err.token.location.line << ")" << endl;
+		cout << "[Error] " << msg
+			 << " at " << (err.token.type == TokenType::Terminator ? "EOF" : "'" + err.token.content + "'")
+			 << " (Line: " << err.token.location.line << ")"
+			 << endl;
 	}
 
 	cout << endl;

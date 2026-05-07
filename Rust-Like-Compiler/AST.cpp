@@ -34,10 +34,18 @@ string BinaryOpToString(BinaryOperator op)
 		return "*";
 	case BinaryOperator::Div:
 		return "/";
-	case BinaryOperator::LT:
-		return "<";
 	case BinaryOperator::EQ:
 		return "==";
+	case BinaryOperator::LT:
+		return "<";
+	case BinaryOperator::LE:
+		return "<=";
+	case BinaryOperator::GT:
+		return ">";
+	case BinaryOperator::GE:
+		return ">=";
+	case BinaryOperator::NE:
+		return "!=";
 	default:
 		return "unknown_op";
 	}

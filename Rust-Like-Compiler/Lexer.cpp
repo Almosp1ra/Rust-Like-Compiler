@@ -315,7 +315,7 @@ Token Lexer::NextToken()
 	}
 	else if (ch == '.')	// .ºÍ..ÌØÊâ·û
 	{
-		if (!IsAtEnd() && Peek() == '=')
+		if (!IsAtEnd() && Peek() == '.')
 		{
 			content += Advance();
 			return Token(TokenType::DotDot, content, location);
