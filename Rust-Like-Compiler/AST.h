@@ -3,49 +3,8 @@
 #include <vector>
 #include <string>
 #include "Token.h"
+#include "Type.h"
 using namespace std;
-
-/*
- * 枚举类型定义
- */
-
-// 数据类型
-enum class PrimitiveType {
-	NullType,
-	I32
-};
-
-// 变量属性
-enum class VariableProperty {
-	NullType,
-	Mut
-};
-
-// 二元运算符
-enum class BinaryOperator {
-	NullType,
-	Add,
-	Sub,
-	Mult,
-	Div,
-	LT,
-	LE,
-	GT,
-	GE,
-	EQ,
-	NE
-};
-
-// 工具函数，枚举类型和 string 之间互相转换
-BinaryOperator TokenToBinaryOp(const Token& s);
-string BinaryOpToString(BinaryOperator op);
-string PrimitiveTypeToString(PrimitiveType type);
-string VariablePropertyToString(VariableProperty property);
-
-// 判断二元运算符是否归属某一类
-bool OpIsAddSub(BinaryOperator op);
-bool OpIsMultDiv(BinaryOperator op);
-bool OpIsComparison(BinaryOperator op);
 
 /*
  * 抽象语法树节点设计 
@@ -117,7 +76,7 @@ struct Node_Type : ASTNode
 };
 struct Node_PrimitiveType : Node_Type
 {
-	PrimitiveType type;
+	DataType type;
 };
 
 // 变量属性

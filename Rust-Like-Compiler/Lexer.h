@@ -1,7 +1,8 @@
 #pragma once
 #include <vector>
-#include<string>
+#include <string>
 #include "Token.h"
+#include "SourceLocation.h"
 using namespace std;
 
 /*

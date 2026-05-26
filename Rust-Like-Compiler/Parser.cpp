@@ -1,5 +1,5 @@
 #include "Parser.h"
-#include <iostream>
+#include "SourceLocation.h"
 
 Parser::Parser(const vector<Token>& tokenList): _tokenList(tokenList)
 {
@@ -123,7 +123,7 @@ unique_ptr<Node_Type> Parser::Parse_Type()
 		Consume(TokenType::Keyword_I32);
 
 		auto type = make_unique<Node_PrimitiveType>();
-		type->type = PrimitiveType::I32;
+		type->type = DataType::I32;
 
 		return type;
 	}

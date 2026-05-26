@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_set>
 #include <map>
+#include "SourceLocation.h"
 using namespace std;
 
 /* 返回的终止符 */
@@ -114,17 +115,6 @@ const map<string, TokenType> STR_TO_TOKENTYPE = {
 	pair<string, TokenType>("..", TokenType::DotDot)
 };
 TokenType StringToTokenType(string content);
-
-/* 
- * 结构体，指示源代码位置
- */
-struct SourceLocation
-{
-	size_t column;
-	size_t line;
-
-	SourceLocation(size_t column = 0, size_t line = 0);
-};
 
 /*
  * Token

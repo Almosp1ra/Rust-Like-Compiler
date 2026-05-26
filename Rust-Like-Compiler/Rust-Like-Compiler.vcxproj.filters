@@ -33,6 +33,9 @@
     <ClCompile Include="CompilerTools.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Type.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AST.h">
@@ -48,6 +51,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="CompilerTools.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SymbolTable.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Type.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SourceLocation.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

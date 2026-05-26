@@ -1,4 +1,5 @@
 #include "CompilerTools.h"
+#include "Type.h"
 
 /*
 * CompilerTools 的成员函数
@@ -277,7 +278,7 @@ void CompilerTools::PrintNode(const ASTNode* node, int depth)
 	if (auto n = dynamic_cast<const Node_PrimitiveType*>(node))
 	{
 		PrintIndent(depth);
-		cout << "Type: " << PrimitiveTypeToString(n->type) << endl;
+		cout << "Type: " << DataTypeToString(n->type) << endl;
 	}
 	else if (auto n = dynamic_cast<const Node_VariableProperty*>(node))
 	{
