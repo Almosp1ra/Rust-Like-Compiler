@@ -101,10 +101,13 @@ unique_ptr<Node_VariableProperty> Parser::Parse_VariableProperty()
 {
 	if (Peek().EqualTo(TokenType::Keyword_Mut))
 	{
-		Consume(TokenType::Keyword_Mut);
+		Token token = Consume(TokenType::Keyword_Mut);
 
 		auto property = make_unique<Node_VariableProperty>();
 		property->property = VariableProperty::Mut;
+
+		property->begin = property->end = token.location;
+		property->end.column += token.content.length() - 1;
 
 		return property;
 	}
@@ -120,10 +123,13 @@ unique_ptr<Node_Type> Parser::Parse_Type()
 {
 	if (Peek().EqualTo(TokenType::Keyword_I32))
 	{
-		Consume(TokenType::Keyword_I32);
+		Token token = Consume(TokenType::Keyword_I32);
 
 		auto type = make_unique<Node_PrimitiveType>();
 		type->type = DataType::I32;
+
+		type->begin = type->end = token.location;
+		type->end.column += token.content.length() - 1;
 
 		return type;
 	}
@@ -141,8 +147,13 @@ unique_ptr<Node_LeftValue> Parser::Parse_LeftValue()
 {
 	if (Peek().EqualTo(TokenType::Identifier))
 	{
+		Token token = Consume(TokenType::Identifier);
+
 		auto leftValue = make_unique<Node_LeftValue_Identifier>();
-		leftValue->name = Consume(TokenType::Identifier).content;
+		leftValue->name = token.content;
+
+		leftValue->begin = leftValue->end = token.location;
+		leftValue->end.column += token.content.length() - 1;
 
 		return leftValue;
 	}
@@ -159,6 +170,16 @@ unique_ptr<Node_Program> Parser::Parse_Program()
 	auto program = make_unique<Node_Program>();
 
 	program->declarations = Parse_DeclarationSequence();
+
+	if (program->declarations.size() > 0)
+	{
+		program->begin = program->declarations.front()->begin;
+		program->end   = program->declarations.back()->end;
+	}
+	else
+	{
+		program->begin = program->end = SourceLocation();
+	}
 
 	return program;
 }
@@ -192,6 +213,9 @@ unique_ptr<Node_FunctionDeclaration> Parser::Parse_FunctionDeclaration()
 	functionDeclaration->header = Parse_FunctionHeaderDeclaration();
 	functionDeclaration->body   = Parse_StatementBlock();
 
+	functionDeclaration->begin = functionDeclaration->header->begin;
+	functionDeclaration->end   = functionDeclaration->body->end;
+
 	return functionDeclaration;
 }
 
@@ -200,16 +224,21 @@ unique_ptr<Node_FunctionHeader> Parser::Parse_FunctionHeaderDeclaration()
 {
 	auto header = make_unique<Node_FunctionHeader>();
 
-	Consume(TokenType::Keyword_Fn);
+	header->begin = Consume(TokenType::Keyword_Fn).location;
 
 	header->name = Consume(TokenType::Identifier).content;
 
 	Consume(TokenType::Delimiter_ParenL);
 	header->parameterList = Parse_ParameterList();
-	Consume(TokenType::Delimiter_ParenR);
+	header->end = Consume(TokenType::Delimiter_ParenR).location;
 
 	// 函数类型声明
 	header->type = Parse_FunctionTypeDeclaration();
+
+	if (header->type != nullptr)
+	{
+		header->end = header->type->end;
+	}
 
 	return header;
 }
@@ -255,11 +284,14 @@ unique_ptr<Node_Parameter> Parser::Parse_Parameter()
 	if (!parameter->varProperty)
 		return nullptr;
 
+	parameter->begin = parameter->varProperty->begin;
+
 	parameter->name = Consume(TokenType::Identifier).content;
 
 	Consume(TokenType::Separator_Colon);
 
 	parameter->type = Parse_Type();
+	parameter->end = parameter->type->end;
 
 	return parameter;
 }
@@ -269,9 +301,9 @@ unique_ptr<Node_StatementBlock> Parser::Parse_StatementBlock()
 {
 	auto statementBlock = make_unique<Node_StatementBlock>();
 
-	Consume(TokenType::Delimiter_BracketL);
+	statementBlock->begin = Consume(TokenType::Delimiter_BracketL).location;
 	statementBlock->statements = Parse_StatementSequence();
-	Consume(TokenType::Delimiter_BracketR);
+	statementBlock->end   = Consume(TokenType::Delimiter_BracketR).location;
 
 	return statementBlock;
 }
@@ -308,8 +340,9 @@ unique_ptr<Node_Statement> Parser::Parse_Statement()
 
 	if (t.EqualTo(TokenType::Separator_Semicolon))
 	{
-		Consume(TokenType::Separator_Semicolon);
-		return make_unique<Node_EmptyStatement>();
+		auto emptyStatement = make_unique<Node_EmptyStatement>();
+		emptyStatement->begin = emptyStatement->end = Consume(TokenType::Separator_Semicolon).location;
+		return emptyStatement;
 	}
 	else if (t.EqualTo(TokenType::Keyword_Return))
 	{
@@ -349,9 +382,9 @@ unique_ptr<Node_ReturnStatement> Parser::Parse_ReturnStatement()
 {
 	auto returnStatement = make_unique<Node_ReturnStatement>();
 
-	Consume(TokenType::Keyword_Return);
-	returnStatement->expr = Parse_OptionalExpression();
-	Consume(TokenType::Separator_Semicolon);
+	returnStatement->begin = Consume(TokenType::Keyword_Return).location;
+	returnStatement->expr  = Parse_OptionalExpression();
+	returnStatement->end   = Consume(TokenType::Separator_Semicolon).location;
 
 	return returnStatement;
 }
@@ -361,7 +394,7 @@ unique_ptr<Node_VariableDeclarationStatement> Parser::Parse_VariableDeclarationS
 {
 	auto variableDeclarationStatement = make_unique<Node_VariableDeclarationStatement>();
 
-	Consume(TokenType::Keyword_Let);
+	variableDeclarationStatement->begin = Consume(TokenType::Keyword_Let).location;
 
 	variableDeclarationStatement->varProperty = Parse_VariableProperty();
 	if (!variableDeclarationStatement->varProperty)
@@ -373,7 +406,7 @@ unique_ptr<Node_VariableDeclarationStatement> Parser::Parse_VariableDeclarationS
 
 	variableDeclarationStatement->type = Parse_VariableTypeDeclaration();
 
-	Consume(TokenType::Separator_Semicolon);
+	variableDeclarationStatement->end = Consume(TokenType::Separator_Semicolon).location;
 
 	return variableDeclarationStatement;
 }
@@ -395,11 +428,20 @@ unique_ptr<Node_IfStatement> Parser::Parse_IfStatement()
 {
 	auto ifStatement = make_unique<Node_IfStatement>();
 
-	Consume(TokenType::Keyword_If);
+	ifStatement->begin = Consume(TokenType::Keyword_If).location;
 
 	ifStatement->condition = Parse_Expression();
 	ifStatement->thenBlock = Parse_StatementBlock();
 	ifStatement->elseBlock = Parse_ElseStatement();
+
+	if (ifStatement->elseBlock != nullptr)
+	{
+		ifStatement->end = ifStatement->elseBlock->end;
+	}
+	else
+	{
+		ifStatement->end = ifStatement->thenBlock->end;
+	}
 
 	return ifStatement;
 }
@@ -421,9 +463,12 @@ unique_ptr<Node_WhileStatement> Parser::Parse_WhileStatement()
 {
 	auto whileStatement = make_unique<Node_WhileStatement>();
 
-	Consume(TokenType::Keyword_While);
+	whileStatement->begin = Consume(TokenType::Keyword_While).location;
+
 	whileStatement->condition = Parse_Expression();
 	whileStatement->body = Parse_StatementBlock();
+
+	whileStatement->end = whileStatement->body->end;
 
 	return whileStatement;
 }
@@ -434,9 +479,13 @@ unique_ptr<Node_AssignmentStatement> Parser::Parse_AssignmentStatement()
 	auto assignmentStatement = make_unique<Node_AssignmentStatement>();
 
 	assignmentStatement->leftValue = Parse_LeftValue();
+	assignmentStatement->begin = assignmentStatement->leftValue->begin;
+
 	Consume(TokenType::Operator_Assign);
+
 	assignmentStatement->expr = Parse_Expression();
-	Consume(TokenType::Separator_Semicolon);
+
+	assignmentStatement->end = Consume(TokenType::Separator_Semicolon).location;
 
 	return assignmentStatement;
 }
@@ -447,7 +496,9 @@ unique_ptr<Node_ExpressionStatement> Parser::Parse_ExpressionStatement()
 	auto expressionStatement = make_unique<Node_ExpressionStatement>();
 
 	expressionStatement->expr =	Parse_Expression();
-	Consume(TokenType::Separator_Semicolon);
+	expressionStatement->begin = expressionStatement->expr->begin;
+
+	expressionStatement->end = Consume(TokenType::Separator_Semicolon).location;
 
 	return expressionStatement;
 }
@@ -487,6 +538,9 @@ unique_ptr<Node_Expression>	Parser::Parse_Expression()
 		expr_temp->op = nextOp;
 		expr_temp->right = Parse_AddSubExpression();
 
+		expr_temp->begin = expr_temp->left->begin;
+		expr_temp->end = expr_temp->right->end;
+
 		nextOp = TokenToBinaryOp(Peek());
 
 		expr = move(expr_temp);
@@ -514,6 +568,9 @@ unique_ptr<Node_Expression>	Parser::Parse_AddSubExpression()
 		expr_temp->left = move(expr);
 		expr_temp->op = nextOp;
 		expr_temp->right = Parse_Term();
+
+		expr_temp->begin = expr_temp->left->begin;
+		expr_temp->end = expr_temp->right->end;
 
 		nextOp = TokenToBinaryOp(Peek());
 
@@ -543,6 +600,9 @@ unique_ptr<Node_Expression>	Parser::Parse_Term()
 		expr_temp->op = nextOp;
 		expr_temp->right = Parse_Term();
 
+		expr_temp->begin = expr_temp->left->begin;
+		expr_temp->end = expr_temp->right->end;
+
 		nextOp = TokenToBinaryOp(Peek());
 
 		expr = move(expr_temp);
@@ -561,7 +621,11 @@ unique_ptr<Node_Expression>	Parser::Parse_Oprand()
 	{
 		auto number = make_unique<Node_NumberExpression>();
 
-		number->value = Consume(TokenType::Value).content;
+		Token token = Consume(TokenType::Value);
+
+		number->value = token.content;
+		number->begin = number->end = token.location;
+		number->end.column += token.content.length() - 1;
 
 		return number;
 	}
@@ -579,16 +643,23 @@ unique_ptr<Node_Expression>	Parser::Parse_Oprand()
 		{
 			auto call = make_unique<Node_CallExpression>();
 
-			call->name = Consume(TokenType::Identifier).content;
+			Token id = Consume(TokenType::Identifier);
+			call->name = id.content;
+			call->begin = id.location;
+
 			Consume(TokenType::Delimiter_ParenL);
 			call->argumentList = Parse_ArgumentList();
-			Consume(TokenType::Delimiter_ParenR);
+			call->end = Consume(TokenType::Delimiter_ParenR).location;
 
 			return call;
 		}
 
 		auto variable = make_unique<Node_VariableExpression>();
+
 		variable->leftValue = Parse_LeftValue();
+		variable->begin = variable->leftValue->begin;
+		variable->end   = variable->leftValue->end;
+
 		return variable;
 	}
 
@@ -626,7 +697,7 @@ vector<unique_ptr<Node_Expression>> Parser::Parse_ArgumentList()
 /************************************************
 * Parse：语法分析，返回抽象语法树根节点
 ************************************************/
-const ASTNode* Parser::Parse()
+ASTNode* Parser::Parse()
 {
 	_root = Parse_Program();
 

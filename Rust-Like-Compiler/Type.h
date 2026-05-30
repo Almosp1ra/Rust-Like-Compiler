@@ -11,6 +11,7 @@ using namespace std;
  // 数据类型
 enum class DataType {
 	NullType,
+	Void,
 	I32
 };
 
@@ -40,6 +41,10 @@ BinaryOperator TokenToBinaryOp(const Token& s);
 string BinaryOpToString(BinaryOperator op);
 string DataTypeToString(DataType type);
 string VariablePropertyToString(VariableProperty property);
+
+class Symbol;
+
+string GetSymbolTypeString(const Symbol* symbol);
 
 // 判断二元运算符是否归属某一类
 bool OpIsAddSub(BinaryOperator op);

@@ -1,4 +1,5 @@
 #include "Type.h"
+#include "SemanticAnalyzer.h"
 
 /************************************************
 * TokenToBinaryOp: Token -> 二元运算符枚举
@@ -54,6 +55,8 @@ string DataTypeToString(DataType type)
 	switch (type) {
 	case DataType::I32:
 		return "i32";
+	case DataType::Void:
+		return "void";
 	default:
 		return "unknown_type";
 	}
@@ -66,6 +69,23 @@ string VariablePropertyToString(VariableProperty property)
 	default:
 		return "unknown_property";
 	}
+}
+
+string GetSymbolTypeString(const Symbol* symbol)
+{
+	if (dynamic_cast<const Symbol_Function*>(symbol))
+		return "Function";
+
+	if (dynamic_cast<const Symbol_Array*>(symbol))
+		return "Array";
+
+	if (dynamic_cast<const Symbol_Param*>(symbol))
+		return "Param";
+
+	if (dynamic_cast<const Symbol_Var*>(symbol))
+		return "Var";
+
+	return "Symbol";
 }
 
 /************************************************

@@ -2,6 +2,7 @@
 #include <iomanip>
 #include "Lexer.h"
 #include "Parser.h"
+#include "SemanticAnalyzer.h"
 #include "CompilerTools.h"
 using namespace std;
 
@@ -62,6 +63,29 @@ int main(int argv, char** argc)
 	}
 
 	CompilerTools::PrintAST(ASTRoot);
+
+	/* 语义检查 */
+
+	// 分析执行
+	SemanticAnalyzer semanticAnalyzer;
+
+	semanticAnalyzer.SemanticAnalyze(ASTRoot);
+
+	const auto& symbolTable = semanticAnalyzer.GetSymbolTable();
+	const auto& semanticErrorList = semanticAnalyzer.GetErrorList();
+
+	// 结果打印
+	CompilerTools::PrintSemanticError(semanticErrorList);
+
+	for (size_t i = 0; i < semanticErrorList.size(); i++)
+	{
+		if (semanticErrorList[i].level == ErrorLevel::Error)	// 出错直接返回
+		{
+			return 0;
+		}
+	}
+
+	CompilerTools::PrintSymbolTable(symbolTable);
 
 	return 0;
 }
