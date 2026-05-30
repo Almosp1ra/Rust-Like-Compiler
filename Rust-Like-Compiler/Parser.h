@@ -100,6 +100,6 @@ private:
 	
 public:
 	// 一键式完成语法分析、获取错误列表
-	const ASTNode* Parse();
+	ASTNode* Parse();
 	const vector<ParserError>& GetErrorList();
 };

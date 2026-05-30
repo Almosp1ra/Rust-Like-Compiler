@@ -42,7 +42,7 @@ void CompilerTools::PrintLexerError(const vector<LexerError>& errorList)
 		string msg =
 			(err.type == LexerErrorType::UndefinedToken) ? "Undefined Token" :
 			(err.type == LexerErrorType::UnterminatedComment) ? "Unterminated Comment" : "Unknown Error";
-		cout << "[Error] " << msg << " (Line: " << err.location.line << ", Column" << err.location.column << ") Content: " << err.content << endl;
+		cout << "[Error] " << msg << " " << err.location << " Content: " << err.content << endl;
 	}
 
 	cout << endl;
@@ -230,7 +230,7 @@ void CompilerTools::PrintParserError(const vector<ParserError>& errorList)
 			(err.type == ParserErrorType::UnterminatedProgram) ? "Unterminated Program" : "Unknown Error";
 		cout << "[Error] " << msg
 			 << " at " << (err.token.type == TokenType::Terminator ? "EOF" : "'" + err.token.content + "'")
-			 << " (Line: " << err.token.location.line << ")"
+			 << " " << err.token.location
 			 << endl;
 	}
 
@@ -253,6 +253,8 @@ void CompilerTools::PrintAST(const ASTNode* root)
 	{
 		cout << "AST is empty." << endl;
 	}
+
+	cout << endl;
 }
 
 /************************************************
@@ -263,7 +265,7 @@ void CompilerTools::PrintAST(const ASTNode* root)
 void CompilerTools::PrintIndent(int depth) {
 	for (int i = 0; i < depth; ++i)
 	{
-			std::cout << "  ";
+			cout << "  ";
 	}
 }
 // 打印节点
@@ -444,3 +446,156 @@ void CompilerTools::PrintNode(const ASTNode* node, int depth)
 		cout << "[Unknown Node Type]" << endl;
 	}
 }
+
+
+/************************************************
+* PrintSemanticError：打印语义检查错误列表
+************************************************/
+void CompilerTools::PrintSemanticError(const vector<SemanticError>& errorList)
+{
+	if (!errorList.size())
+	{
+		cout << "No Semantic Errors." << endl;
+		cout << endl;
+		return;
+	}
+
+	cout << "--- Semantic Errors: ---" << endl;
+	for (size_t i = 0; i < errorList.size(); i++)
+	{
+		const auto& err = errorList[i];
+		string msg = err.message;
+
+		cout << (err.level == ErrorLevel::Error ? "[Error] " : "[Warning] ")
+			<< msg << " " << err.begin << endl;
+	}
+
+	cout << endl;
+
+	return;
+}
+
+
+/************************************************
+* PrintSymbolTable：打印符号表
+************************************************/
+void CompilerTools::PrintSymbolTable(const SymbolTable& symbolTable)
+{
+	cout << "--- Symbol Table ---" << endl;
+
+	// 基本信息
+	cout << "scopeCount   : " << symbolTable.scopes.size() << endl;
+	cout << "symbolCount  : " << symbolTable.symbols.size() << endl;
+	cout << endl;
+
+	// 分作用域输出
+	for (size_t i = 0; i < symbolTable.scopes.size(); i++)
+	{
+		const Scope* scope = symbolTable.scopes[i].get();
+		if (!scope) continue;
+
+		cout << "[Scope] id=" << scope->id
+			 << ", level=" << scope->level;
+
+		if (scope == symbolTable.globalScope)  cout << " (global)";
+		if (scope == symbolTable.currentScope)  cout << " (current)";
+
+		cout << endl;
+
+		cout << "parent : ";
+		if (scope->parent)
+			cout << "id=" << scope->parent->id << ", level=" << scope->parent->level << endl;
+		else
+			cout << "null" << endl;
+
+		if (scope->symbols.empty())
+		{
+			cout << "  <empty>" << endl << endl;
+			continue;
+		}
+
+		for (auto it = scope->symbols.begin(); it != scope->symbols.end(); it++)
+		{
+			cout << "  symbol key: " << it->first << endl;
+			if (it->second)
+				PrintSymbol(it->second, 4);
+			else
+				cout << "    <null symbol>" << endl;
+		}
+
+		cout << endl;
+	}
+}
+
+void CompilerTools::PrintSymbol(const Symbol* symbol, int indent)
+{
+	string pad(indent, ' ');
+
+	cout << pad << "type        : " << GetSymbolTypeString(symbol) << endl;
+	cout << pad << "Unique Name : " << symbol->uniqueName << endl;
+	cout << pad << "Data Type   : " << DataTypeToString(symbol->dataType) << endl;
+	cout << pad << "Is Const    : " << (symbol->isConst ? "true" : "false") << endl;
+	cout << pad << "Scope       : ";
+	if (symbol->scope)
+	{
+		cout << "id=" << symbol->scope->id << ", level=" << symbol->scope->level << endl;
+	}
+	else
+	{
+		cout << "null" << endl;
+	}
+
+	cout << pad << "begin       : " << symbol->begin << endl;
+	cout << pad << "end         : " << symbol->end << endl;
+
+	if (auto* var = dynamic_cast<const Symbol_Var*>(symbol))
+	{
+		cout << pad << "isAutoType : " << (var->isAutoType ? "true" : "false") << endl;
+		cout << pad << "isInit     : " << (var->isInitialized ? "true" : "false") << endl;
+	}
+
+	if (auto* fn = dynamic_cast<const Symbol_Function*>(symbol))
+	{
+		cout << pad << "bodyScope  : ";
+		if (fn->bodyScope)
+		{
+			cout << "id=" << fn->bodyScope->id << ", level=" << fn->bodyScope->level << endl;
+		}
+		else
+		{
+			cout << "null" << endl;
+		}
+
+		cout << pad << "paramCount : " << fn->paramCount << endl;
+		cout << pad << "params     : ";
+		if (fn->params.empty())
+		{
+			cout << "[]" << endl;
+		}
+		else
+		{
+			cout << "[" << endl;
+			for (size_t i = 0; i < fn->params.size(); i++)
+			{
+				const auto* p = fn->params[i];
+
+				if (!p)
+				{
+					continue;
+				}
+
+				cout << pad << "  - " << p->name << " : " << DataTypeToString(p->dataType) << endl;
+			}
+			cout << pad << "]" << endl;
+		}
+	}
+
+	if (auto* arr = dynamic_cast<const Symbol_Array*>(symbol))
+	{
+		cout << pad << "isArray    : " << (arr->isArray ? "true" : "false") << endl;
+		cout << pad << "arraySize  : " << arr->arraySize << endl;
+	}
+
+	cout << pad << "--------------------------------" << endl;
+}
+

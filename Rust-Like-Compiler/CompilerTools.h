@@ -3,6 +3,7 @@
 #include <iomanip>
 #include "Lexer.h"
 #include "Parser.h"
+#include "SemanticAnalyzer.h"
 using namespace std;
 
 /* 
@@ -20,9 +21,14 @@ public:
 	static void PrintTokenList(const vector<Token>& tokenList);
 	static void PrintLexerError(const vector<LexerError>& errorList);
 
-	// 词法分析结果打印
+	// 语法分析结果打印
 	static void PrintParserError(const vector<ParserError>& errorList);
 	static void PrintAST(const ASTNode* root);
 	static void PrintIndent(int depth);
 	static void PrintNode(const ASTNode* node, int depth);
+
+	// 语义检查结果打印
+	static void PrintSemanticError(const vector<SemanticError>& errorList);
+	static void PrintSymbolTable(const SymbolTable& symbolTable);
+	static void PrintSymbol(const Symbol* symbol, int indent = 4);
 };

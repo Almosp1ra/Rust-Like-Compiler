@@ -132,6 +132,9 @@
     <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="SemanticAnalyzer.cpp" />
+    <ClCompile Include="SourceLocation.cpp" />
+    <ClCompile Include="SymbolTable.cpp" />
     <ClCompile Include="Token.cpp" />
     <ClCompile Include="CompilerTools.cpp" />
     <ClCompile Include="Type.cpp" />
@@ -140,6 +143,7 @@
     <ClInclude Include="AST.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="Parser.h" />
+    <ClInclude Include="SemanticAnalyzer.h" />
     <ClInclude Include="SourceLocation.h" />
     <ClInclude Include="SymbolTable.h" />
     <ClInclude Include="Token.h" />

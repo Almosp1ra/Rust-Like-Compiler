@@ -1,10 +1,5 @@
 #include "Token.h"
 
-SourceLocation::SourceLocation(size_t column, size_t line)
-	: column(column), line(line)
-{
-}
-
 Token::Token(TokenType type, const string& content, const SourceLocation& location)
 	: type(type), content(content), location(location)
 {
