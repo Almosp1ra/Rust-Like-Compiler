@@ -50,7 +50,7 @@ class Symbol_Function : public Symbol
 {
 public:
 	int paramCount = 0;				// 参数个数
-	vector<Symbol*> params;			// 参数符号列表
+	vector<Symbol_Param*> params;			// 参数符号列表
 
 	Scope* bodyScope = nullptr;     // 函数对应内部作用域的指针
 
@@ -108,14 +108,10 @@ public:
 
 	size_t scopeCounter;
 
-	//vector<string> errors;        // 错误信息
-	//vector<string> warnings;      // 警告信息
-
 	SymbolTable();
 
-	// 
-	void EnterScope();
-	void ExitScope();
+	void EnterScope();	// 新建并进入作用域
+	void ExitScope();	// 退出当前作用域
 
 	template<typename SymbolType>
 	SymbolType* InsertSymbol(const SymbolType& symbol)
