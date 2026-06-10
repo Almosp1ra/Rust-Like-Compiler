@@ -45,6 +45,9 @@
     <ClCompile Include="SourceLocation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="IntermediateCodeGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AST.h">
@@ -72,6 +75,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="SemanticAnalyzer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="IntermediateCodeGenerator.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

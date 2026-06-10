@@ -4,11 +4,13 @@
 #include "Parser.h"
 #include "SemanticAnalyzer.h"
 #include "CompilerTools.h"
+#include "IntermediateCodeGenerator.h"
+
 using namespace std;
 
 int main(int argv, char** argc)
 {
-	/* ÃüÁîĞĞ²ÎÊı½âÎö */
+	/* å‘½ä»¤è¡Œå‚æ•°è§£æ */
 
 	if (argv != 2)
 	{
@@ -18,9 +20,9 @@ int main(int argv, char** argc)
 
 	string filename = argc[1];
 
-	/* ´Ê·¨·ÖÎö */
+	/* è¯æ³•åˆ†æ */
 
-	// ³õÊ¼»¯¡¢¶ÁÈëÔ´´úÂëÎÄ¼ş
+	// åˆå§‹åŒ–ã€è¯»å…¥æºä»£ç æ–‡ä»¶
 	Lexer lexer;
 
 	try
@@ -33,11 +35,11 @@ int main(int argv, char** argc)
 		return -1;
 	}
 
-	// ·ÖÎöÖ´ĞĞ
+	// åˆ†ææ‰§è¡Œ
 	const auto& tokenList = lexer.Lex();
 	const auto& lexerErrorList = lexer.GetErrorList();
 
-	// ½á¹û´òÓ¡
+	// ç»“æœæ‰“å°
 	CompilerTools::PrintLexerError(lexerErrorList);
 	CompilerTools::PrintTokenList(tokenList);
 
@@ -46,27 +48,27 @@ int main(int argv, char** argc)
 		return 0;
 	}
 
-	/* Óï·¨·ÖÎö */
+	/* è¯­æ³•åˆ†æ */
 
-	// ·ÖÎöÖ´ĞĞ
+	// åˆ†ææ‰§è¡Œ
 	Parser parser(tokenList);
 
 	auto ASTRoot = parser.Parse();
 	const auto& parserErrorList = parser.GetErrorList();
 
-	// ½á¹û´òÓ¡
+	// ç»“æœæ‰“å°
 	CompilerTools::PrintParserError(parserErrorList);
 
-	if (parserErrorList.size())	// ³ö´íÖ±½Ó·µ»Ø
+	if (parserErrorList.size())	// å‡ºé”™ç›´æ¥è¿”å›
 	{
 		return 0;
 	}
 
 	CompilerTools::PrintAST(ASTRoot);
 
-	/* ÓïÒå¼ì²é */
+	/* è¯­ä¹‰æ£€æŸ¥ */
 
-	// ·ÖÎöÖ´ĞĞ
+	// åˆ†ææ‰§è¡Œ
 	SemanticAnalyzer semanticAnalyzer;
 
 	semanticAnalyzer.SemanticAnalyze(ASTRoot);
@@ -74,18 +76,42 @@ int main(int argv, char** argc)
 	const auto& symbolTable = semanticAnalyzer.GetSymbolTable();
 	const auto& semanticErrorList = semanticAnalyzer.GetErrorList();
 
-	// ½á¹û´òÓ¡
+	// ç»“æœæ‰“å°
 	CompilerTools::PrintSemanticError(semanticErrorList);
 
 	for (size_t i = 0; i < semanticErrorList.size(); i++)
 	{
-		if (semanticErrorList[i].level == ErrorLevel::Error)	// ³ö´íÖ±½Ó·µ»Ø
+		if (semanticErrorList[i].level == ErrorLevel::Error)	// å‡ºé”™ç›´æ¥è¿”å›
 		{
 			return 0;
 		}
 	}
 
 	CompilerTools::PrintSymbolTable(symbolTable);
+
+	/* ä¸­é—´ä»£ç ç”Ÿæˆ */
+
+	IntermediateCodeGenerator generator;
+
+	generator.Generate(ASTRoot);
+
+	const auto& quadruples = generator.GetQuadruples();
+
+	cout << endl;
+	cout << "--- Intermediate Code ---" << endl;
+
+	for (size_t i = 0; i < quadruples.size(); i++)
+	{
+		cout
+			<< "("
+			<< quadruples[i].op << ", "
+			<< quadruples[i].arg1 << ", "
+			<< quadruples[i].arg2 << ", "
+			<< quadruples[i].result
+			<< ")"
+			<< endl;
+	}
+
 
 	return 0;
 }
