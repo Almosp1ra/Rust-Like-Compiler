@@ -97,6 +97,12 @@ void IntermediateCodeGenerator::GenerateFunction(Node_FunctionDeclaration* node)
 
     Emit("func", "_", "_", node->header->name);
 
+    // 新增了形参表示
+    for (const auto& param : node->header->parameterList)
+    {
+        Emit("param", param->symbol->uniqueName, "_", "_");
+    }
+
     GenerateStatementBlock(node->body.get());
 
     Emit("endfunc", "_", "_", node->header->name);
@@ -129,7 +135,9 @@ void IntermediateCodeGenerator::GenerateStatement(Node_Statement* node)
 
     if (auto varDecl = dynamic_cast<Node_VariableDeclarationStatement*>(node))
     {
-        Emit("decl", "_", "_", varDecl->name);
+        // Emit("decl", "_", "_", varDecl->name);
+        // 可能更应该用唯一名声明
+        Emit("decl", "_", "_", varDecl->symbol->uniqueName);
     }
     else if (auto assign = dynamic_cast<Node_AssignmentStatement*>(node))
     {
@@ -220,7 +228,7 @@ string IntermediateCodeGenerator::GenerateExpression(Node_Expression* node)
 
         for (const auto& arg : args)
         {
-            Emit("param", arg, "_", "_");
+            Emit("arg", arg, "_", "_");   // 实参，用arg表示
         }
 
         string temp = NewTemp();

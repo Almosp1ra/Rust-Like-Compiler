@@ -46,6 +46,14 @@ public:
 	bool CanBeLeftValue() override;
 };
 
+class Symbol_Param : public Symbol
+{
+public:
+	Symbol_Param(const string& name, DataType dataype, Scope* scope, const SourceLocation& begin, const SourceLocation& end);
+
+	bool CanBeLeftValue() override;
+};	
+
 class Symbol_Function : public Symbol
 {
 public:
@@ -55,14 +63,6 @@ public:
 	Scope* bodyScope = nullptr;     // 函数对应内部作用域的指针
 
 	Symbol_Function(const string& name, DataType dataype, Scope* scope, const SourceLocation& begin, const SourceLocation& end);
-};
-
-class Symbol_Param : public Symbol
-{
-public:
-	Symbol_Param(const string& name, DataType dataype, Scope* scope, const SourceLocation& begin, const SourceLocation& end);
-
-	bool CanBeLeftValue() override;
 };
 
 class Symbol_Array : public Symbol
