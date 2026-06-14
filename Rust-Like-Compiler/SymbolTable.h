@@ -46,23 +46,23 @@ public:
 	bool CanBeLeftValue() override;
 };
 
-class Symbol_Function : public Symbol
-{
-public:
-	int paramCount = 0;				// 参数个数
-	vector<Symbol*> params;			// 参数符号列表
-
-	Scope* bodyScope = nullptr;     // 函数对应内部作用域的指针
-
-	Symbol_Function(const string& name, DataType dataype, Scope* scope, const SourceLocation& begin, const SourceLocation& end);
-};
-
 class Symbol_Param : public Symbol
 {
 public:
 	Symbol_Param(const string& name, DataType dataype, Scope* scope, const SourceLocation& begin, const SourceLocation& end);
 
 	bool CanBeLeftValue() override;
+};	
+
+class Symbol_Function : public Symbol
+{
+public:
+	int paramCount = 0;				// 参数个数
+	vector<Symbol_Param*> params;			// 参数符号列表
+
+	Scope* bodyScope = nullptr;     // 函数对应内部作用域的指针
+
+	Symbol_Function(const string& name, DataType dataype, Scope* scope, const SourceLocation& begin, const SourceLocation& end);
 };
 
 class Symbol_Array : public Symbol
@@ -108,14 +108,10 @@ public:
 
 	size_t scopeCounter;
 
-	//vector<string> errors;        // 错误信息
-	//vector<string> warnings;      // 警告信息
-
 	SymbolTable();
 
-	// 
-	void EnterScope();
-	void ExitScope();
+	void EnterScope();	// 新建并进入作用域
+	void ExitScope();	// 退出当前作用域
 
 	template<typename SymbolType>
 	SymbolType* InsertSymbol(const SymbolType& symbol)
